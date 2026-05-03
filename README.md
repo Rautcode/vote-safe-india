@@ -1,5 +1,8 @@
 # 🛡️ VoteSafe India — Civic Rights Emergency Shield
 
+**Live Deployment**: [https://votesafe-india-704949680170.us-central1.run.app](https://votesafe-india-704949680170.us-central1.run.app)
+**GitHub Repository**: [https://github.com/Rautcode/vote-safe-india](https://github.com/Rautcode/vote-safe-india)
+
 > *"Every election app explains the process. VoteSafe protects you when the process fails."*
 
 **VoteSafe India** is an AI-powered civic rights protection tool designed for Indian voters. It goes beyond generic voter education — it provides **emergency legal scripts, booth simulation training, and real-time rights guidance** so that no citizen is denied their constitutional right to vote.
@@ -197,10 +200,10 @@ Print-ready card with dynamic data:
 - pip
 
 ### Quick Start
-```bash
-# Clone the repository
-git clone https://github.com/Rautcode/vote-safe-india.git
-cd vote-safe-india
+# 🛡️ VoteSafe India — Civic AI Strategist
+
+**Live Deployment**: [https://votesafe-india-704949680170.us-central1.run.app](https://votesafe-india-704949680170.us-central1.run.app)
+**GitHub Repository**: [https://github.com/Rautcode/vote-safe-india](https://github.com/Rautcode/vote-safe-india)
 
 # Install dependencies
 pip install -r requirements.txt
