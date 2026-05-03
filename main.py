@@ -9,7 +9,35 @@ import urllib.request
 import hashlib
 from datetime import datetime
 
-app = FastAPI(title="VoteSafe India API")
+# ── Google Gemini Integration ──────────────────────────────────────────────────
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+gemini_model = None
+
+try:
+    if GEMINI_API_KEY:
+        import google.generativeai as genai
+        genai.configure(api_key=GEMINI_API_KEY)
+        gemini_model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=(
+                "You are the VoteSafe India Civic AI Strategist — an expert in Indian electoral law, "
+                "voter rights, and the Representation of the People Act 1950/1951. "
+                "You help Indian citizens understand their voting rights clearly and concisely. "
+                "Always cite specific rules (Rule 49P, Section 128 RPA, Article 326 etc.) when relevant. "
+                "Keep answers under 150 words. Be direct, empowering, and legally accurate. "
+                "If asked about something unrelated to voting or civic rights in India, politely redirect. "
+                "Never provide medical, financial, or legal advice beyond voter rights."
+            )
+        )
+        print("✅ Gemini API connected successfully")
+    else:
+        print("⚠️  GEMINI_API_KEY not set — AI features will use fallback responses")
+except ImportError:
+    print("⚠️  google-generativeai not installed — run: pip install google-generativeai")
+except Exception as e:
+    print(f"⚠️  Gemini init error: {e}")
+
+app = FastAPI(title="VoteSafe India API", description="Civic Rights Protection powered by Google Gemini")
 
 app.add_middleware(
     CORSMiddleware,
@@ -184,26 +212,56 @@ async def get_faqs():
 
 @app.post("/api/v1/complaint/generate")
 async def generate_complaint(req: ComplaintRequest):
-    if req.situation_id == 3:
-        text = f"""TO THE PRESIDING OFFICER
+    """Generate a formal legal complaint letter. Uses Gemini AI when available for personalized language."""
+    if req.situation_id != 3:
+        return {"status": "error", "message": "Situation not supported in this demo yet."}
+
+    # ── Try Gemini-powered complaint first ────────────────────────────────────
+    if gemini_model:
+        try:
+            prompt = (
+                f"Write a formal legal complaint letter in English for an Indian voter whose vote was stolen. "
+                f"Voter name: {req.user_name}. Constituency: {req.constituency}. Booth number: {req.booth_number}. "
+                f"Date: {datetime.now().strftime('%d %B %Y')}. "
+                f"The letter must cite Rule 49P of the Conduct of Elections Rules 1961, demand a Tendered Ballot, "
+                f"request Form 17B, and reference Article 326 of the Constitution. "
+                f"Keep it formal, under 200 words, and address it to the Presiding Officer."
+            )
+            response = gemini_model.generate_content(prompt)
+            ai_text = response.text.strip()
+            return {
+                "status": "success",
+                "complaint_text": ai_text,
+                "ai_generated": True
+            }
+        except Exception as e:
+            print(f"Gemini complaint generation failed: {e} — falling back to template")
+
+    # ── Static fallback template ──────────────────────────────────────────────
+    text = f"""TO THE PRESIDING OFFICER
 Booth No: {req.booth_number}
 Constituency: {req.constituency}
 
 SUBJECT: DEMAND FOR TENDERED BALLOT UNDER RULE 49P (2026 ELECTIONS)
 
 Sir/Madam,
-I, {req.user_name}, arrived at the booth to cast my vote, only to be told that someone has already voted against my name. 
+I, {req.user_name}, arrived at the booth to cast my vote, only to be informed that
+someone has already voted against my name fraudulently.
 
-I possess valid identification. Under Rule 49P of the Conduct of Elections Rules, 1961, I demand my right to cast a Tendered Ballot. Please provide me with Form 17B immediately.
+I possess valid identification. Under Rule 49P of the Conduct of Elections Rules, 1961,
+I hereby formally demand my right to cast a Tendered Ballot. Please provide me with
+Form 17B immediately so that my identity is placed on official record.
 
-Denial of this right is a violation of my constitutional right under Article 326.
+Denial of this right constitutes a violation of my constitutional right to vote
+guaranteed under Article 326 of the Constitution of India.
+
+I request this matter to be escalated to the Election Observer immediately.
 
 Signed,
 {req.user_name}
-Date: {datetime.now().strftime('%Y-%m-%d')}"""
-        return {"status": "success", "complaint_text": text}
-    
-    return {"status": "error", "message": "Situation not supported in this demo yet."}
+Date: {datetime.now().strftime('%d %B %Y')}"""
+
+    return {"status": "success", "complaint_text": text, "ai_generated": False}
 
 @app.post("/api/v1/status/briefing")
 async def get_briefing(req: StatusRequest):
@@ -229,6 +287,86 @@ async def get_briefing(req: StatusRequest):
             "polling_hours": "7:00 AM - 6:00 PM"
         }
     }
+
+# ── Civic AI Chat Endpoint ───────────────────────────────────────────────────
+
+class CivicAIRequest(BaseModel):
+    question: str
+    context: str = ""  # Optional context: user's state, situation
+
+@app.post("/api/v1/civic-ai/ask")
+async def civic_ai_ask(req: CivicAIRequest):
+    """Civic AI Strategist — powered by Google Gemini.
+    
+    Answers questions about Indian voter rights, electoral law, and
+    booth procedures. Falls back to rule-based answers if Gemini is unavailable.
+    """
+    question = req.question.strip()
+    if not question:
+        return {"status": "error", "message": "Question cannot be empty"}
+
+    # Reject non-civic questions
+    civic_keywords = [
+        "vote", "voter", "booth", "election", "eci", "epic", "ballot",
+        "right", "rule", "form", "register", "complaint", "officer",
+        "indelible", "evm", "vvpat", "nota", "constituency", "polling",
+        "1950", "49p", "126", "128", "aadhaar", "id", "identity",
+        "fraud", "impersonation", "bribe", "cvigil", "helpline"
+    ]
+    question_lower = question.lower()
+    if not any(kw in question_lower for kw in civic_keywords):
+        return {
+            "status": "success",
+            "answer": "I can only assist with voter rights and Indian election-related questions. Please ask about your voting rights, booth procedures, or electoral complaints.",
+            "ai_generated": False
+        }
+
+    # ── Gemini-powered response ────────────────────────────────────────────────
+    if gemini_model:
+        try:
+            context_prefix = f"User context: {req.context}. " if req.context else ""
+            full_prompt = f"{context_prefix}Voter question: {question}"
+            response = gemini_model.generate_content(full_prompt)
+            return {
+                "status": "success",
+                "answer": response.text.strip(),
+                "ai_generated": True
+            }
+        except Exception as e:
+            print(f"Gemini AI ask failed: {e} — using fallback")
+
+    # ── Rule-based fallback answers ────────────────────────────────────────────
+    fallbacks = {
+        "stolen": "Under Rule 49P, demand a Tendered Ballot and sign Form 17B. Call 1950 immediately.",
+        "missing": "Ask the officer to check the BLO's supplementary list. If still missing, demand written refusal under Section 49M.",
+        "booth": "SMS 'EPIC <your_id>' to 1950 or visit electoralsearch.eci.gov.in to find your current booth.",
+        "id": "12 documents are accepted: Aadhaar, PAN, Driving License, Passport, and 8 others. You do not need your EPIC card.",
+        "bribe": "Report via the cVIGIL app with a photo/video. Flying Squad responds within 100 minutes. Your identity is protected.",
+        "nota": "NOTA is the last option on the ballot. It is legally counted and valid — your protest is officially recorded.",
+        "disable": "The Presiding Officer must provide assistance. You may bring a companion (Rule 49N) or request the ballot unit be brought to you.",
+        "register": "Apply via Form 6 on voters.eci.gov.in. You need Aadhaar/PAN, age proof, and address proof.",
+    }
+    for keyword, answer in fallbacks.items():
+        if keyword in question_lower:
+            return {"status": "success", "answer": answer, "ai_generated": False}
+
+    return {
+        "status": "success",
+        "answer": "For immediate help, call the national voter helpline at 1950 (toll-free). For emergency booth situations, use the Emergency Assistance section.",
+        "ai_generated": False
+    }
+
+
+@app.get("/api/v1/health")
+async def health_check():
+    """Health check endpoint — returns API status and Gemini availability."""
+    return {
+        "status": "ok",
+        "gemini_available": gemini_model is not None,
+        "version": "1.0.0",
+        "timestamp": datetime.now().isoformat()
+    }
+
 
 if __name__ == "__main__":
     import uvicorn
