@@ -251,6 +251,18 @@ vote-safe-india/
 
 ---
 
+---
+
+## 🗺️ Future Roadmap (Scaling to 97 Cr+ Voters)
+
+1. **AI-Powered OCR (Gemini Vision)**: Scan EPIC cards to auto-fill registration details and verify booth assignments instantly using Gemini 1.5 Flash.
+2. **Offline-First PWA**: Implement full Service Worker caching so the legal emergency scripts work in zero-network environments inside polling booths.
+3. **Google Wallet Integration**: Allow voters to save their personalized "Voter Briefing Card" and "Legal Shield" to Google Wallet for instant access.
+4. **Voice-First Interface**: Implement a multi-lingual voice assistant for voters with low literacy to receive emergency rights guidance through natural conversation.
+5. **Real-time Queue Analytics**: Crowd-sourced reporting of booth wait times and incident heat-maps for ECI observers.
+
+---
+
 ## 🏆 Why VoteSafe Matters
 
 > In 2024, over **6,200 complaints** of voter intimidation were filed across India. Most voters didn't know their rights.
