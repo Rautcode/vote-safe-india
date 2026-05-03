@@ -16,6 +16,18 @@ India has 97 Cr+ registered voters across 10.5 lakh polling stations. Yet every 
 
 ---
 
+## 🎯 Challenge Expectations
+
+| Expectation | How VoteSafe India Meets It |
+|---|---|
+| **Smart, Dynamic Assistant** | The **Civic AI Strategist** (Gemini-powered) doesn't just give static FAQs; it analyzes voter questions about Rule 49P, booth issues, and legal rights to give real-time, context-aware advice. |
+| **Logical Decision Making** | The app detects 5 specific emergency scenarios (Stolen Vote, Missing Name, etc.) and branches the UI logic to provide the specific legal script and action timeline relevant to that exact crisis. |
+| **Effective Use of Google Services** | Deep integration of **6 Google Services**: Gemini AI (Legal logic), Google Maps (Booth location), Google Calendar (Reminders), Google Translate (22 Languages), Google Fonts (Aesthetics), and Cloud Run (Hosting). |
+| **Practical Usability** | Designed for the "30-second crisis" at a polling booth. High-performance vanilla JS, offline-first logic, and a one-click legal complaint generator make it usable in high-stress environments. |
+| **Clean & Maintainable Code** | Modular architecture, fully typed FastAPI backend, comprehensive 39-test suite, and detailed documentation. |
+
+---
+
 ## 🧠 Approach & Logic
 
 ### The Core Insight

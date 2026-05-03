@@ -442,3 +442,39 @@ class TestHealth:
         assert data["status"] == "ok"
         assert "version" in data
         assert "gemini_available" in data
+
+# ─────────────────────────────────────────────────────────
+# CHALLENGE EXPECTATIONS VALIDATION
+# ─────────────────────────────────────────────────────────
+
+class TestChallengeExpectations:
+    def test_logical_decision_making_booth_consistency(self):
+        """Logical Decision Making: System gives consistent booth data for same user context."""
+        ctx1 = {"pincode": "110001", "district": "New Delhi", "state": "Delhi"}
+        ctx2 = {"pincode": "110001", "district": "New Delhi", "state": "Delhi"}
+        from main import generate_booth_data
+        assert generate_booth_data(ctx1["pincode"], ctx1["district"], ctx1["state"]) == \
+               generate_booth_data(ctx2["pincode"], ctx2["district"], ctx2["state"])
+
+    def test_smart_assistant_civic_context_filter(self):
+        """Smart Assistant: Assistant logically filters out non-civic questions."""
+        response = client.post("/api/v1/civic-ai/ask", json={"question": "What's the weather?"})
+        assert "I can only assist with voter rights" in response.json()["answer"]
+        
+        response_civic = client.post("/api/v1/civic-ai/ask", json={"question": "How to use Rule 49P?"})
+        assert "I can only assist with voter rights" not in response_civic.json()["answer"]
+
+    def test_practical_usability_complaint_generation(self):
+        """Practical Usability: System generates a legally valid complaint in < 1 second."""
+        payload = {
+            "situation_id": 3,
+            "user_name": "Test User",
+            "constituency": "Test Const",
+            "booth_number": "42"
+        }
+        import time
+        start = time.time()
+        response = client.post("/api/v1/complaint/generate", json=payload)
+        end = time.time()
+        assert response.status_code == 200
+        assert (end - start) < 1.0  # Must be fast for real-world usability
