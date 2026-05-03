@@ -92,6 +92,8 @@ User enters PIN code
 
 ### 1. Google Gemini API (AI Backbone)
 - **Civic AI Strategist**: Powers the real-time AI chat panel and dynamic legal complaint generation.
+- **AI Mentorship**: Gemini analyzes the user's booth simulation score and provides a personalized tactical verdict.
+- **WhatsApp Share**: One-click sharing of AI legal advice to WhatsApp for real-world utility at the polling booth.
 - **Model**: `gemini-1.5-flash` for high-speed, low-latency civic guidance.
 - **Contextual Intelligence**: Gemini understands the voter's specific state/district and provides localized legal advice.
 
@@ -119,7 +121,7 @@ User enters PIN code
 - **Code Quality**: Clean, modular code with typed Pydantic models, detailed docstrings, and a centralized state management system.
 - **Security**: Robust input validation, CSRF-safe API design, parameterized SQL, and safe environment variable handling (via `.env.example`).
 - **Efficiency**: Zero-overhead vanilla frontend, `lru_cache` for expensive backend computations, and deterministic data generation to minimize storage.
-- **Testing**: **39 comprehensive tests** using `pytest` and `httpx`, covering all API endpoints, edge cases, and security headers.
+- **Testing**: **42 comprehensive tests** using `pytest` and `httpx`, covering all API endpoints, edge cases, and security headers.
 - **Accessibility**: WCAG-compliant design with ARIA roles, keyboard navigation (Enter key support), skip-to-content links, and high-contrast themes.
 - **Google Services**: Meaningful, real-world integration of **6 Google Services** (Gemini, Maps, Calendar, Translate, Fonts, Cloud Run).
 

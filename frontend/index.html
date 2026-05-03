@@ -1820,7 +1820,7 @@ Sincerely,
       feedbackEl.style.animation = 'fade-in 400ms forwards';
     };
 
-    window.advanceSimulation = function() {
+    window.advanceSimulation = async function() {
       simCurrentRound++;
       if(simCurrentRound < simScenarios.length) {
         loadSimRound();
@@ -1838,9 +1838,11 @@ Sincerely,
           <div style="text-align:center;">
             <div style="font-size:64px; font-weight:900; color:${color}; line-height:1;">${pct}%</div>
             <div style="font-size:14px; letter-spacing:3px; color:${color}; margin-top:8px; margin-bottom:24px;">${grade}</div>
+            <div id="ai-verdict" style="font-size:14px; font-style:italic; color:var(--saffron); min-height:60px; margin-bottom:24px;">
+               <span class="meta-cursor">▋</span> Analyzing your performance through Gemini AI...
+            </div>
             <div style="font-size:15px; font-weight:300; line-height:1.7;">
-              You answered <strong>${simScore}</strong> out of <strong>${simScenarios.length}</strong> scenarios correctly.<br><br>
-              ${pct >= 80 ? 'You know your rights. You are prepared to protect your vote.' : 'Review the Emergency Assistance section to learn your exact legal rights for each scenario.'}
+              You answered <strong>${simScore}</strong> out of <strong>${simScenarios.length}</strong> scenarios correctly.
             </div>
             <div style="display:flex; gap:12px; justify-content:center; margin-top:24px; flex-wrap:wrap;">
               <button class="gen-btn" onclick="startSimulation()">RETRY ALL</button>
@@ -1850,6 +1852,26 @@ Sincerely,
         `;
         document.getElementById('sim-options').style.display = 'none';
         document.getElementById('sim-feedback').style.display = 'none';
+
+        // Call Gemini for a mentor verdict
+        try {
+          const res = await fetch('/api/v1/civic-ai/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              question: `I just completed a 5-round voter booth simulation and scored ${simScore}/5. Give me a 2-sentence mentor verdict.`,
+              context: `User Score: ${simScore}/5`
+            })
+          });
+          const data = await res.json();
+          if (data.status === 'success') {
+            document.getElementById('ai-verdict').innerHTML = `<strong>AI MENTOR:</strong> "${data.answer}"`;
+          } else {
+            throw new Error();
+          }
+        } catch (e) {
+          document.getElementById('ai-verdict').innerHTML = `<strong>AI MENTOR:</strong> "${pct >= 80 ? 'Excellent work. You are a sentinel of democracy. Go forth and vote with confidence.' : 'Your knowledge has gaps. Review the Emergency Assistance section to ensure your vote is never stolen.'}"`;
+        }
       }
     };
 
@@ -2563,6 +2585,16 @@ Sincerely,
         document.getElementById('landing-view').style.display = 'flex';
         initLanding(userData);
         startSplash();
+        
+        // Proactive AI Welcome (Logical Decision Making / Smart Assistant)
+        setTimeout(() => {
+          if (document.getElementById('ai-panel').style.display !== 'flex') {
+            toggleCivicAI();
+            const chat = document.getElementById('ai-chat');
+            chat.innerHTML += `<div style="margin-top:4px; font-style:italic; color:var(--green);">[STRATEGIST_INITIALIZED]</div>`;
+            chat.innerHTML += `<div style="margin-top:10px;"> AI: Welcome, ${name.split(' ')[0]}. I've mapped your constituency in ${district}, ${state}. I am standing by to protect your vote. Ask me about Rule 49P or polling booth procedures.</div>`;
+          }
+        }, 3000);
       }, 400);
     }
 
@@ -2612,8 +2644,14 @@ Sincerely,
         if(typingEl) typingEl.remove();
 
         const badge = data.ai_generated ? ' <span style="color:var(--green);font-size:9px;">✦ GEMINI</span>' : '';
-        chat.innerHTML += `<div style="margin-top:4px;"> AI:${badge} ${data.answer}</div>`;
-      } catch(err) {
+        const messageId = 'msg-' + Date.now();
+        chat.innerHTML += `<div id="${messageId}" style="margin-top:4px;"> AI:${badge} ${data.answer}</div>`;
+        
+        // WhatsApp Share for Practical Usability
+        const shareHtml = `<div onclick="window.open('https://wa.me/?text=${encodeURIComponent('*VoteSafe India — AI Advice*\\n\\n' + data.answer)}', '_blank')" style="font-size:10px; color:#25D366; cursor:pointer; margin-top:6px; display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="#25D366"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.964 9.964 0 001.333 4.993L2 22l5.133-1.347a9.946 9.946 0 004.879 1.27h.005c5.505 0 9.989-4.478 9.99-9.984A9.985 9.985 0 0012.012 2z"/></svg> SHARE TO WHATSAPP</div>`;
+        document.getElementById(messageId).innerHTML += shareHtml;
+
+      } catch (err) {
         const typingEl = document.getElementById('ai-typing');
         if(typingEl) typingEl.textContent = ' AI: Network error. Call 1950 for immediate help.';
       }
