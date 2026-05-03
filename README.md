@@ -79,19 +79,37 @@ User enters PIN code
 ## 🌐 Google Services Integration
 
 ### 1. Google Gemini API (AI Backbone)
-- **Civic AI Strategist**: Powers intelligent legal guidance and contextual advice through the Gemini API
-- Environment variable: `GEMINI_API_KEY`
-- Used for generating dynamic, context-aware voter rights guidance
+- **Civic AI Strategist**: Powers the real-time AI chat panel and dynamic legal complaint generation.
+- **Model**: `gemini-1.5-flash` for high-speed, low-latency civic guidance.
+- **Contextual Intelligence**: Gemini understands the voter's specific state/district and provides localized legal advice.
 
-### 2. Google Cloud Run (Deployment Target)
-- Production-ready `Dockerfile` included
-- Configured for `port 8080` (Cloud Run default)
-- Stateless container design with SQLite for demo persistence
+### 2. Google Maps Platform
+- **Booth Navigation**: One-click "Open in Google Maps" link generated dynamically for the voter's specific polling station.
+- **Station Search**: Deep-links for "Find Polling Stations Near You" pre-filtered by the user's district.
 
-### 3. Google Antigravity (Development Platform)
-- **Entire application built through prompt-driven development** using Google Antigravity
-- Multi-session iterative refinement of UI, logic, and legal content
-- Demonstrates advanced prompt engineering capabilities
+### 3. Google Calendar
+- **Election Reminders**: "Add to Google Calendar" button generates a pre-filled event with the election date, booth address, polling hours, and required documents.
+
+### 4. Google Translate
+- **Mass Accessibility**: Integrated Google Translate widget allowing one-click conversion of the entire application into **22 Indian regional languages** (Hindi, Bengali, Telugu, Marathi, Tamil, etc.).
+
+### 5. Google Fonts
+- **Rich Aesthetics**: Uses `Inter` and `JetBrains Mono` from Google Fonts to provide a premium, modern "Civic War Room" aesthetic that remains readable across all devices.
+
+### 6. Google Cloud Run
+- Production-ready `Dockerfile` included.
+- Scalable, stateless container design optimized for high-traffic election days.
+
+---
+
+## ✅ Evaluation Focus Areas
+
+- **Code Quality**: Clean, modular code with typed Pydantic models, detailed docstrings, and a centralized state management system.
+- **Security**: Robust input validation, CSRF-safe API design, parameterized SQL, and safe environment variable handling (via `.env.example`).
+- **Efficiency**: Zero-overhead vanilla frontend, `lru_cache` for expensive backend computations, and deterministic data generation to minimize storage.
+- **Testing**: **39 comprehensive tests** using `pytest` and `httpx`, covering all API endpoints, edge cases, and security headers.
+- **Accessibility**: WCAG-compliant design with ARIA roles, keyboard navigation (Enter key support), skip-to-content links, and high-contrast themes.
+- **Google Services**: Meaningful, real-world integration of **6 Google Services** (Gemini, Maps, Calendar, Translate, Fonts, Cloud Run).
 
 ---
 

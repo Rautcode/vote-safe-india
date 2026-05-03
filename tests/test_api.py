@@ -399,3 +399,46 @@ class TestEdgeCases:
         }
         response = client.post("/api/v1/incidents", json=payload)
         assert response.status_code == 200
+
+# ─────────────────────────────────────────────────────────
+# CIVIC AI & HEALTH
+# ─────────────────────────────────────────────────────────
+
+class TestCivicAI:
+    def test_civic_ai_success(self):
+        """Civic AI strategist returns a relevant answer."""
+        response = client.post("/api/v1/civic-ai/ask", json={
+            "question": "What is Rule 49P?",
+            "context": "Delhi"
+        })
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert "answer" in data
+        assert len(data["answer"]) > 10
+
+    def test_civic_ai_non_civic_rejection(self):
+        """Civic AI rejects non-election related questions."""
+        response = client.post("/api/v1/civic-ai/ask", json={
+            "question": "What is the best movie?",
+            "context": ""
+        })
+        assert response.status_code == 200
+        data = response.json()
+        assert "I can only assist with voter rights" in data["answer"]
+
+    def test_civic_ai_empty_question(self):
+        """Civic AI returns error for empty question."""
+        response = client.post("/api/v1/civic-ai/ask", json={"question": ""})
+        assert response.status_code == 200
+        assert response.json()["status"] == "error"
+
+class TestHealth:
+    def test_health_endpoint(self):
+        """Health endpoint returns system status and version."""
+        response = client.get("/api/v1/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+        assert "version" in data
+        assert "gemini_available" in data

@@ -37,18 +37,24 @@ except ImportError:
 except Exception as e:
     print(f"⚠️  Gemini init error: {e}")
 
-app = FastAPI(title="VoteSafe India API", description="Civic Rights Protection powered by Google Gemini")
+app = FastAPI(
+    title="VoteSafe India API", 
+    description="Civic Rights Protection powered by Google Gemini",
+    version="1.0.4"
+)
 
+# ── Security: CORS Refinement ────────────────────────────────────────────────
+# In production, this should be restricted to specific domains.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
-# Database Setup
-DB_PATH = "votesafe.db"
+# ── Database Setup ───────────────────────────────────────────────────────────
+DB_PATH = os.environ.get("DATABASE_URL", "votesafe.db")
 
 # 2026 Election Data & States
 INDIAN_STATES = [
@@ -102,6 +108,14 @@ class UserOnboard(BaseModel):
     pincode: str = None
     epic: str = None
 
+    def validate(self):
+        """Manual validation for security and correctness."""
+        if not self.name or len(self.name.strip()) < 2:
+            return False, "Name too short"
+        if self.pincode and (not self.pincode.isdigit() or len(self.pincode) != 6):
+            return False, "Pincode must be 6 digits"
+        return True, ""
+
 class IncidentLog(BaseModel):
     user_name: str
     msg: str
@@ -129,7 +143,13 @@ async def serve_frontend():
 async def get_states():
     return {"status": "success", "states": INDIAN_STATES}
 
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
 def generate_booth_data(pincode: str, district: str, state: str):
+    """Generates deterministic booth data based on pincode to avoid massive DB storage.
+    Efficiency: Uses LRU cache to avoid re-hashing for the same location.
+    """
     # Deterministic generation based on pincode
     seed = int(hashlib.md5(str(pincode).encode()).hexdigest(), 16) % 10000
     prefixes = ["Govt Primary School", "Zilla Parishad School", "Municipal Corporation Building", "Community Hall", "Panchayat Office", "Higher Secondary School", "Town Hall", "Public Library Building"]
